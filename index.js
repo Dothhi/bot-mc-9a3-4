@@ -6,6 +6,7 @@ const CONFIG = {
   port: 25565,
   username: 'Bot_AFK_247_4',
   version: '1.20',
+  viewDistance: '2',
   reconnectDelay: 15000,
 };
 
@@ -30,6 +31,11 @@ function createBot() {
     version: CONFIG.version,
     viewDistance: 'tiny',
     physicsEnabled: false,
+  });
+
+  bot.once('spawn', () => {
+    console.log('Bot đã vào game');
+    if (bot.entities) bot.entities = {};
   });
 
   bot.on('kicked', (reason) => {
