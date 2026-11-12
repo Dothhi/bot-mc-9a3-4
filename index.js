@@ -4,10 +4,11 @@ const http = require('http');
 const CONFIG = {
   host: '9a3smp.mcsh.gg',
   port: 25565,
-  username: 'Minvietsub',
+  username: 'Bot_AFK_247_4',
   version: '1.20',
   targetServer: 'smp', // <-- Đổi tên server con của bạn ở đây
   reconnectDelay: 15000,
+  maxSessionDuration: 20 * 60 * 1000, // 20 phút tính bằng mili-giây
 };
 
 let bot = null;
@@ -36,7 +37,7 @@ function createBot() {
     port: CONFIG.port,
     username: CONFIG.username,
     version: CONFIG.version,
-    viewDistance: '2',
+    viewDistance: 'tiny',
     physicsEnabled: false,
   });
 
@@ -52,6 +53,17 @@ function createBot() {
       }
     }, 3000);
 
+    // Bắt đầu đếm ngược 20 phút sau khi bot spawn thành công để tự thoát và vào lại
+    sessionTimeout = setTimeout(() => {
+      console.log('Đã chạy đủ 20 phút, tiến hành thoát để kết nối lại...');
+      if (bot) {
+        try {
+          bot.quit();
+        } catch {}
+      }
+    }, CONFIG.maxSessionDuration);
+  });
+
   bot.on('kicked', (reason) => {
     console.log('Bị kick:', typeof reason === 'object' ? JSON.stringify(reason) : reason);
   });
@@ -59,6 +71,17 @@ function createBot() {
   bot.on('error', (err) => {
     console.log('Lỗi:', err.message);
   });
+
+  bot.on('end', () => {
+    console.log('Mất kết nối, sẽ vào lại sau 15s...');
+    // Dọn dẹp bộ đếm phiên khi bot ngắt kết nối
+    if (sessionTimeout) {
+      clearTimeout(sessionTimeout);
+      sessionTimeout = null;
+    }
+    scheduleReconnect();
+  });
+}
 
 function scheduleReconnect() {
   if (reconnectTimeout) return;
